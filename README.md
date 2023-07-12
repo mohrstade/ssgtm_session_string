@@ -2,7 +2,7 @@
 Creates a Session String with a Session ID which is a timestamp when the session started, Session Number, and Update Timestamp.
 
 ## Persisting the Session String
-To persist the cookie for example you can use the [Cookie Monster Template.](https://www.simoahava.com/custom-templates/cookie-monster/) You can persist the cookie for as long as you want as the session duration handling is happening within the generated value. My recommendation would be 400 days. Use the same cookie name as defined in the template.
+To persist the cookie for example you can use the [Cookie Monster Template.](https://www.simoahava.com/custom-templates/cookie-monster/) You can persist the cookie for as long as you want as the session duration handling is happening within the generated value. My recommendation would be 400 days. Use the same cookie name as defined in the template. It also makes sense to not update the cookie on [`user_engagement`](https://support.google.com/analytics/answer/11109416?hl=en) event or any events that you do not want to trigger an extension of the session.
 
 ## Structure of the Cookie
 This is the structure of the value:
