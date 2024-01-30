@@ -2,5 +2,5 @@ homepage: "https://mohrstade.de/"
 documentation: "https://github.com/mohrstade/ssgtm_session_string#readme"
 versions:
   # Latest version
-  - sha: 501d4ca9c1864538cc681f017d16100db3246601
+  - sha: 6d61ddc8703bc0363d963d6ae3051bbcb1e1fff6
     changeNotes: Initial release.
