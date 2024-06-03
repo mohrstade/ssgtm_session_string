@@ -2,5 +2,5 @@ homepage: "https://mohrstade.de/"
 documentation: "https://github.com/mohrstade/ssgtm_session_string#readme"
 versions:
   # Latest version
-  - sha: 6d61ddc8703bc0363d963d6ae3051bbcb1e1fff6
-    changeNotes: Initial release.
+  - sha: 34f6a0db7e78c14ba45b9b65262463282bf5d109
+    changeNotes: Adjust session id to use seconds timestamp + Add logo.
