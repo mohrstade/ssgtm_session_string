@@ -52,25 +52,33 @@ const getCookieValues = require("getCookieValues");
 const getTimestampMillis = require("getTimestampMillis");
 const logToConsole = require('logToConsole');
 const makeNumber = require('makeNumber');
+const Math = require('Math');
 
 const cookie_name = data.cookieName||"_fp_custom_session";
 const session_lifetime_mins = data.lifetimeMinutes||30;
 const separator = ".";
 
-const current_timestamp_ms = getTimestampMillis();
+
+
+function removeDigits(myNumber, digitsToRemove){
+  return (myNumber- (myNumber%Math.pow(10, digitsToRemove)))/Math.pow(10, digitsToRemove);
+}
+
+const current_timestamp_seconds = removeDigits(getTimestampMillis(),3);
 
 const update_session_cookie = function (curent_session_number, current_session_id) {
 
-  const timestamp_ms = current_timestamp_ms;
   logToConsole(curent_session_number);
   let session_number =  current_session_id && curent_session_number ?  curent_session_number : curent_session_number++;
   logToConsole(curent_session_number);
-  const session_id = current_session_id || timestamp_ms;
-  const session_array = [session_id,curent_session_number,timestamp_ms];
+  const session_id = current_session_id || current_timestamp_seconds;
+  const session_array = [session_id,curent_session_number,current_timestamp_seconds];
   const session_string = session_array.join(separator);
   logToConsole({session_string: session_string});
+  //data.gtmOnSuccess();
   return session_string;
 };
+
 
 //readSessionCookie
 const cookie = getCookieValues(cookie_name, true);
@@ -79,10 +87,11 @@ const cookie = getCookieValues(cookie_name, true);
 if(cookie.length) {
   logToConsole(cookie);
   const cookieArray = cookie[0].split(".");
-  const cookie_timestamp_ms = cookieArray[2];
+  //Need to check if timestamps are 10 digits long to ensure long session cookie is migrated to short one. Otherwise cut last 3 digits.
+  const cookie_timestamp_seconds = cookieArray[2].length === 10 ? cookieArray[2] : removeDigits(cookieArray[2],3);
   const cookie_session_no = makeNumber(cookieArray[1]);
-  const cookie_session_id = cookieArray[0];
-  if(current_timestamp_ms - cookie_timestamp_ms > session_lifetime_mins *60*1000) {
+  const cookie_session_id = cookieArray[0].length === 10 ? cookieArray[0] : removeDigits(cookieArray[0],3);
+  if(current_timestamp_seconds - cookie_timestamp_seconds > session_lifetime_mins * 60) {
      logToConsole("Session older than session lifetime");
      return update_session_cookie(cookie_session_no, undefined);
   } else {
@@ -151,7 +160,7 @@ scenarios:
     };
 
     mock("getCookieValues", (name, encode) => {
-      return ["108101939925376.1.168909533362"];
+      return ["1081019399.1.1689095333"];
     });
 
     mock("setCookie", (cookieName, cookieValue, cookieSettings) => {
@@ -166,9 +175,53 @@ scenarios:
 
     // Call runCode to run the template's code.
     runCode(mockData);
+- name: old Cookie sessionOlderThenLifetime
+  code: |-
+    const mockData = {
+      // Mocked field values
+    };
 
-    // Verify that the tag finished successfully.
-    assertApi('gtmOnSuccess').wasCalled();
+    mock("getCookieValues", (name, encode) => {
+      return ["1081019399000.1.1689095333000"];
+    });
+
+    mock("setCookie", (cookieName, cookieValue, cookieSettings) => {
+      if (cookieName === "_fp_custom_session") {
+        const cookieTimstamp = cookieValue.split(".")[1];
+        assertThat(cookieTimstamp).isEqualTo("2");
+      }
+      else {
+        fail("Unexpected cookie: " + cookieName);
+      }
+    });
+
+    // Call runCode to run the template's code.
+    runCode(mockData);
+- name: same Session
+  code: |
+    const mockData = {
+      // Mocked field values
+    };
+
+    // Mocking getCookieValues function to return a session cookie with a timestamp 30 minutes ago
+    mock("getCookieValues", (name, encode) => {
+      return ['1716752835.2.1716752835'];
+    });
+
+    // Mocking setCookie function to check if the session ID remains constant after an event within 30 minutes
+    mock("setCookie", (cookieName, cookieValue, cookieSettings) => {
+      if (cookieName === "_fp_custom_session") {
+        // Splitting cookie value to extract session ID
+        const sessionId = cookieValue.split(".")[0];
+        // Asserting that the session ID remains constant after an event within 30 minutes
+        assertThat(sessionId).isEqualTo("1716752835");
+      } else {
+        fail("Unexpected cookie: " + cookieName);
+      }
+    });
+
+    // Call runCode to run the template's code.
+    runCode(mockData);
 setup: ''
 
 
